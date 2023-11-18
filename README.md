@@ -1,4 +1,4 @@
-# In_vino_veritas
+# In Vino Veritas
 University project on data engineering with Airflow.
 
 # Current ToDos:
