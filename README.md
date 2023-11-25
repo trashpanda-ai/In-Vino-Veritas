@@ -7,9 +7,6 @@ University project on data engineering with Airflow.
     1. Include Scraper notebook as papermill operator
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
        
-1. Build methods to get data based on (Year+X)-Tupels:
-    1. Method to generate Weather features based on (Year+Region)
-       
 1. Adapt new datamodel based on Ricardos Input (Star Schema? Ingestion at startup?)
        
 1. Make Visualizations in Frontend Notebook
