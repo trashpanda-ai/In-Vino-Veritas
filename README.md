@@ -14,6 +14,7 @@ University project on data engineering with Airflow.
        
 1. Make Visualizations in Frontend Notebook
     1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?) (+ make sure no redundant code)
+    1. Fix sorting of all boxplots (always high to low)
     1. Correlation heatmap between enrichment features and rating 
     1. ANOVA between enrichment features and rating
     1. Quick boxplot among wine categories (red, white, sparkling, rosé, dessert, port)
