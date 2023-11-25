@@ -17,6 +17,7 @@ University project on data engineering with Airflow.
     1. Correlation heatmap between enrichment features and rating 
     1. ANOVA between enrichment features and rating
     1. Quick boxplot among wine categories (red, white, sparkling, rosé, dessert, port)
+    1. Quick single scatter plot only for red-wine
     1. Combine all visualizations to a clean notebook with ToC (maybe automatically run?)
   
 1. In depth Report/readme why architecture (expensive API calls etc)
