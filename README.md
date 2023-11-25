@@ -13,9 +13,10 @@ University project on data engineering with Airflow.
 1. Adapt new datamodel based on Ricardos Input (Star Schema? Ingestion at startup?)
        
 1. Make Visualizations in Frontend Notebook
-    1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?)
-    1. Correlation heatmap between enrichment features and rating
+    1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?) (+ make sure no redundant code)
+    1. Correlation heatmap between enrichment features and rating 
     1. ANOVA between enrichment features and rating
+    1. Quick boxplot among wine categories (red, white, sparkling, rosé, dessert, port)
     1. Combine all visualizations to a clean notebook with ToC (maybe automatically run?)
   
 1. In depth Report/readme why architecture (expensive API calls etc)
