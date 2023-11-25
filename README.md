@@ -1,19 +1,16 @@
 # In Vino Veritas
 University project on data engineering with Airflow.
 
-# Current ToDos (sorted by priority:
+# Current ToDos (sorted by priority):
 1. Dockerize Airflow and Databases
     1. Design Airflow pipeline incl Docker and Postgres
-    1. Add offline fallbacks (If offline: load CSV Files with the dedicated data; Else: API Call/Scrape)
+    1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
        
-1. Refine Scraper notebook and comment and include as papermill operator
+1. Include Scraper notebook as papermill operator
 1. Build methods to get data based on (Year+X)-Tupels:
     1. Method to generate Weather features based on (Year+Region)
-    1. Method to generate Trend feature based on (Year+Grape) 
-    1. Method to generate Harvest features based on (Year+Country)
        
 1. Adapt new datamodel based on Ricardos Input (Star Schema? Ingestion at startup?)
-1. Use parquet
        
 1. Make Visualizations in Frontend Notebook
     1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?)
