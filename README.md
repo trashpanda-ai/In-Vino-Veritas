@@ -4,9 +4,9 @@ University project on data engineering with Airflow.
 # Current ToDos (sorted by priority):
 1. Dockerize Airflow and Databases
     1. Design Airflow pipeline incl Docker and Postgres
+    1. Include Scraper notebook as papermill operator
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
        
-1. Include Scraper notebook as papermill operator
 1. Build methods to get data based on (Year+X)-Tupels:
     1. Method to generate Weather features based on (Year+Region)
        
