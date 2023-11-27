@@ -50,8 +50,8 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.3}
-  # build: .
+  # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.3}
+  build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -61,7 +61,7 @@ x-airflow-common:
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW_HOME: "/opt/airflow"
-    AIRFLOW__LOGGING__LOGGING_LEVEL: WARNING
+    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
     AIRFLOW__WEBSERVER__EXPOSE_CONFIG : "True"
     AIRFLOW__WEBSERVER__EXPOSE_HOSTNAME: "True"
     AIRFLOW__CORE__FERNET_KEY: ''
@@ -69,14 +69,7 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW__CORE__TEST_CONNECTION: "Enabled"
-    AIRFLOW_CONN_POSTGRES_DEFAULT: '{
-        "conn_type": "Postgres",
-        "host": "postgres",
-        "login": "airflow",
-        "password": "airflow",
-        "port": 5432,
-        "schema": "postgres",
-        }'
+
     
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
