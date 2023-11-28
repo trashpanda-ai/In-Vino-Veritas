@@ -20,6 +20,7 @@ An university project on data engineering with Airflow based on wine data
 1. Add easy startup routine and put in [How to run?](#how-to-run)
 1. Clean up folder structure incl outputs etc
 
+<span style="color: green"> Some green text </span>
 
 ## Table of contents
 - [Introduction](#introduction)
