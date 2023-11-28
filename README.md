@@ -20,7 +20,7 @@ An university project on data engineering with Airflow based on wine data
 1. Add easy startup routine and put in [How to run?](#how-to-run)
 1. Clean up folder structure incl outputs etc
 
-<span style="color: green"> Some green text </span>
+
 
 ## Table of contents
 - [Introduction](#introduction)
@@ -89,7 +89,7 @@ For the last dimension to enrich our vivino data, we obtain weather data based o
 # Pipeline
 The overall pipeline is implemented in Apache Airflow and can be separated in three sections: Ingestion, Staging and Production.
 
-TBD: Picture will be changed after data model is finalized
+TBD: Picture will be changed after data model is finalized  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 ![alt text](https://github.com/trashpanda-ai/In_vino_veritas/blob/main/ressources/Flow%20Diagram.png?raw=true)
 
 ## Ingestion
@@ -100,6 +100,7 @@ The wine quality data set is already cleaned and readily available and only need
 The Staging area includes two main tasks: cleansing and enrichment.
 
 ### Cleansing
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 The newly scraped data is loaded from the Parquet file and by application of a left join with the production data, removing the already existing wines. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
 The 'new' wines are then cleaned with a growing list of rules.
 This cleaned data can then be appended to the production data. All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files).
@@ -116,14 +117,14 @@ For the Google trends, our main obstacle is the unofficial API: basically a URL 
 
 
 This could improve our success-rate in terms of stable connections from ~5% to ~80%. The API calls are still very slow, which is the reason we try to avoid it as much as possible. This is also the reason our parser tries to find only very similar wines in every execution, so the API calls can be minimal.
-We obtain the unique (Grape + Year)-Tuples from our recently cleaned new scraped data and for each of those we generate the mean and median search frequency, which is then appended to the respective table for the production data.
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Grape + Year)-Tuples from our recently cleaned new scraped data and for each of those we generate the mean and median search frequency, which is then appended to the respective table for the production data.  
 
 While wine can be consumed long after the year of the obtained trend, the vast majority of consumers follow a buy-and-drink approach instead of collecting [Source](http://winegourd.blogspot.com/2021/01/how-soon-is-wine-consumed-after-purchase.html). This is why we decided to match the trend with the production year. An easier and less data-intensive alternative would be to only include the current trend data. But since your ultimate goal is to be able to design and implement complex data pipelines we opted for the more difficult architecture.
 
-For the harvest data our approach is very straight forward: We obtain the unique (Country + Year)-Tuples from our recently cleaned new scraped data and for each of those we retrieve the Grape Production Area and Amount and the Wine Production Amount. These three features are then appended to the respective table for the production data.
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) For the harvest data our approach is very straight forward: We obtain the unique (Country + Year)-Tuples from our recently cleaned new scraped data and for each of those we retrieve the Grape Production Area and Amount and the Wine Production Amount. These three features are then appended to the respective table for the production data.
 
 The last enrichment data is the weather data: Since we aim for the exact weather data, the GPS location is extracted via Geopy from the vivino.com region instead of country. The nature of a user-based website leads unfortunately to inaccuracies. If a region cannot be found, we log the region to later include in the cleaning process (often the grape variety is entered as region on vivino). Another failsafe against wrong coordinates is a check whether the found location matches the regions' dedicated country. This way our location results are very robust. For the desired weather data, we average the $n$ closest stations' data for a more robust and granular time series.
-We obtain the unique (Region + Year + Country)-Tuples from our recently cleaned new scraped data and for each of those we generate the following specifically engineered features for the growth period (March 11th -- September 20th) of the wines:
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Region + Year + Country)-Tuples from our recently cleaned new scraped data and for each of those we generate the following specifically engineered features for the growth period (March 11th -- September 20th) of the wines:
 - ```Vola_Temp```: Volatility of temperature
 - ```Vola_Rain ```: Volatility of rain
 - ```Longest_Dry ```: Longest period without rain
@@ -139,36 +140,35 @@ These $10$ features are then appended to the respective table for the production
 
 ## Production
 We opted for a star schema where the vivino data is our fact table and the enrichment data are dimension tables.
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 TBD insert Picture 
 
 <img src='https://upload.wikimedia.org/wikipedia/commons/b/bb/Star-schema.png' width='550'>
 
 ### Queries
 The queries are designed to leverage our star schema and combine the fact table with one of the dimension tables each to generate the necessary data for our insights. 
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
+
 # Future developments
+1. One can parse [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling.
+1. One can compare weather APIs (by number of NaNs and predictive qualities): meteostat vs open-meteo
 
-Use (and parse) lists of “officially good” wine years (e.g., https://www.winespectator.com/vintage-charts) to select best  weather features in terms of predictive models
-
-- Compare weather APIs (by number of NaNs and ANOVA): meteostat vs open meteo
-
-
-
-
-
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 
 # Results and Conclusion
 
 The [Jupyter notebook]() shows: ...
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 
-
-Data needs to be cleaned iteratively and parsing can easily end in duplicates
-
-High dimensional data and many features
-
-Obtaining sound and reliable weather data is more expensive than financial data?
+Obstacles: 
+- Data needs to be cleaned iteratively and parsing can easily end in duplicates
+- High dimensional data and many features
+- Obtaining sound and reliable weather data 
 
 # How to run?
 TBD Marcell
+ ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
+
 
 ```s
 ./start.sh
