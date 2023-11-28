@@ -1,3 +1,10 @@
 apache-airflow-providers-papermill
 ipykernel
-pyarrow
+pyarrow==10.0.1
+fastparquet
+pytrends
+faostat
+geopy
+geopy
+meteostat
+ucimlrepo
