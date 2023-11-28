@@ -5,9 +5,7 @@ An university project on data engineering with Airflow based on wine data
 1. Dockerize Airflow and Databases
     1. Design Airflow pipeline incl Docker and Postgres
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
-       
 1. Adapt new datamodel based on Ricardos Input (Star Schema + Permanent Production Data)
-       
 1. Make Visualizations in Frontend Notebook
     1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?) (+ make sure no redundant code)
     1. Fix sorting of all boxplots (always high to low)
@@ -18,6 +16,7 @@ An university project on data engineering with Airflow based on wine data
     1. Combine all visualizations to a clean notebook with ToC (maybe automatically run?)
   
 1. Finalize Report/readme with graphs and schemas
+1. Adjust report: data is not cleaned before it is appended, but the whole table is cleaned. This is necessary for two reasons: cleaning rules are by nature lagging and have to be applied for 'old' data anyway. And the google trends API has stochastic malfunctions. So we need to retry for the unsuccessful tuples. As we always check wether the tuples exist, this does not lead to more API calls or overall more computations
 1. Add easy startup routine and put in [How to run?](#how-to-run)
 1. Clean up folder structure incl outputs etc
 
@@ -100,7 +99,7 @@ The wine quality data set is already cleaned and readily available and only need
 The Staging area includes two main tasks: cleansing and enrichment.
 
 ### Cleansing
-The newly scraped data is loaded from the Parquet file and by application of a left join with the production data, we remove the already existing wines. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
+The newly scraped data is loaded from the Parquet file and by application of a left join with the production data, removing the already existing wines. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
 The 'new' wines are then cleaned with a growing list of rules.
 This cleaned data can then be appended to the production data. All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files).
 
