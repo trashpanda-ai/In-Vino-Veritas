@@ -115,7 +115,7 @@ For the Google trends, our main obstacle is the unofficial API: basically a URL 
 
 
 
-This could improve our success-rate in terms of stable connections from ~5% to ~80%. The API calls are still very slow, which is the reason we try to avoid it as much as possible. This is also the reason our parser tries to find only very similar wines in every execution, so the API calls can be minimal.
+This could improve our success-rate in terms of stable connections from ~1% to ~25% - 60%. So we have to re-try for the tuples that can't be found. The API calls are still very slow, which is the reason we try to avoid it as much as possible. This is also the reason our parser tries to find only very similar wines in every execution, so the API calls can be minimal.
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Grape + Year)-Tuples from our recently cleaned new scraped data and for each of those we generate the mean and median search frequency, which is then appended to the respective table for the production data.  
 
 While wine can be consumed long after the year of the obtained trend, the vast majority of consumers follow a buy-and-drink approach instead of collecting [Source](http://winegourd.blogspot.com/2021/01/how-soon-is-wine-consumed-after-purchase.html). This is why we decided to match the trend with the production year. An easier and less data-intensive alternative would be to only include the current trend data. But since your ultimate goal is to be able to design and implement complex data pipelines we opted for the more difficult architecture.
