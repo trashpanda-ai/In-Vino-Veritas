@@ -2,11 +2,10 @@
 An university project on data engineering with Airflow based on wine data 
 
 # Current ToDos (sorted by priority):
-1. Dockerize Airflow and Databases
+1. Dockerize Airflow and Databases (Marcell)
     1. Design Airflow pipeline incl Docker and Postgres
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
-1. Adapt new datamodel based on Ricardos Input (Star Schema + Permanent Production Data)
-1. Make Visualizations in Frontend Notebook
+1. Make Visualizations in Frontend Notebook (Jonas)
     1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?) (+ make sure no redundant code)
     1. Fix sorting of all boxplots (always high to low)
     1. Correlation heatmap between enrichment features and rating 
@@ -14,11 +13,10 @@ An university project on data engineering with Airflow based on wine data
     1. Quick boxplot among wine categories (red, white, sparkling, rosé, dessert, port)
     1. Quick single scatter plot only for red-wine
     1. Combine all visualizations to a clean notebook with ToC (maybe automatically run?)
-  
-1. Finalize Report/readme with graphs and schemas
-1. Adjust report: data is not cleaned before it is appended, but the whole table is cleaned. This is necessary for two reasons: cleaning rules are by nature lagging and have to be applied for 'old' data anyway. And the google trends API has stochastic malfunctions. So we need to retry for the unsuccessful tuples. As we always check wether the tuples exist, this does not lead to more API calls or overall more computations
-1. Add easy startup routine and put in [How to run?](#how-to-run)
-1. Clean up folder structure incl outputs etc
+1. Clean up folder structure incl outputs etc (Jonas)
+1. Finalize Report/readme with graphs and schemas (Both)
+1. Adjust report: data is not cleaned before it is appended, but the whole table is cleaned. This is necessary for two reasons: cleaning rules are by nature lagging and have to be applied for 'old' data anyway. And the google trends API has stochastic malfunctions. So we need to retry for the unsuccessful tuples. As we always check wether the tuples exist, this does not lead to more API calls or overall more computations (Both)
+1. Add easy startup routine and put in [How to run?](#how-to-run) (Marcell)
 
 
 
@@ -93,9 +91,10 @@ TBD: Picture will be changed after data model is finalized  ![](https://via.plac
 ![alt text](https://github.com/trashpanda-ai/In_vino_veritas/blob/main/ressources/Flow%20Diagram.png?raw=true)
 
 ## Ingestion
-For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
+For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
 
 The wine quality data set is already cleaned and readily available and only needs to be loaded and saved in a Postgres database.
+
 ## Staging
 The Staging area includes two main tasks: cleansing and enrichment.
 
@@ -103,7 +102,7 @@ The Staging area includes two main tasks: cleansing and enrichment.
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 The newly scraped data is loaded from the Parquet file and by application of a left join with the production data, removing the already existing wines. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
 The 'new' wines are then cleaned with a growing list of rules.
-This cleaned data can then be appended to the production data. All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files).
+This cleaned data can then be appended to the production data. All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files). Based on the feedback during our presentation, this is now implemented in Postgres instead of MongoDB as the data is already structured.
 
 ### Enrichments
 For the Google trends, our main obstacle is the unofficial API: basically a URL generator pasting the keyword and year into a URL template and using the ```request``` Python package to parse the result. The problem is the uninspired implementation of the latter, because one is immediately identified as a parser. Thus we had to come up with a fix: A connection set-up through manually created cookies
@@ -123,7 +122,7 @@ While wine can be consumed long after the year of the obtained trend, the vast m
 
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) For the harvest data our approach is very straight forward: We obtain the unique (Country + Year)-Tuples from our recently cleaned new scraped data and for each of those we retrieve the Grape Production Area and Amount and the Wine Production Amount. These three features are then appended to the respective table for the production data.
 
-The last enrichment data is the weather data: Since we aim for the exact weather data, the GPS location is extracted via Geopy from the vivino.com region instead of country. The nature of a user-based website leads unfortunately to inaccuracies. If a region cannot be found, we log the region to later include in the cleaning process (often the grape variety is entered as region on vivino). Another failsafe against wrong coordinates is a check whether the found location matches the regions' dedicated country. This way our location results are very robust. For the desired weather data, we average the $n$ closest stations' data for a more robust and granular time series.
+The last enrichment data is the weather data: Since we aim for the exact weather data, the GPS location is extracted via ```Geopy``` from the vivino.com region instead of country. The nature of a user-based website leads unfortunately to inaccuracies. If a region cannot be found, we log the region to later include in the cleaning process (often the grape variety is entered as region on vivino). Another failsafe against wrong coordinates is a check whether the found location matches the regions' dedicated country. This way our location results are very robust. For the desired weather data, we average the $n$ closest stations' data for a more robust and granular time series.
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Region + Year + Country)-Tuples from our recently cleaned new scraped data and for each of those we generate the following specifically engineered features for the growth period (March 11th -- September 20th) of the wines:
 - ```Vola_Temp```: Volatility of temperature
 - ```Vola_Rain ```: Volatility of rain
@@ -139,7 +138,7 @@ The last enrichment data is the weather data: Since we aim for the exact weather
 These $10$ features are then appended to the respective table for the production data.
 
 ## Production
-We opted for a star schema where the vivino data is our fact table and the enrichment data are dimension tables.
+Based on the input during our presentation, we switched from Neo4j to a more suitable star schema on Postgres where the vivino data is our fact table and the enrichment data are dimension tables.
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 TBD insert Picture 
 
