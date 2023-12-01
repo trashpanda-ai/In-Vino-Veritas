@@ -2,20 +2,16 @@
 An university project on data engineering with Airflow based on wine data 
 
 # Current ToDos (sorted by priority):
-1. Dockerize Airflow and Databases (Marcell)
-    1. Design Airflow pipeline incl Docker and Postgres
+1. Dockerized Airflow pipeline incl Databases (Marcell)
+    1. Finalize Airflow pipeline
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
 1. Make Visualizations in Frontend Notebook (Jonas)
-    1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?) (+ make sure no redundant code)
-    1. Fix sorting of all boxplots (always high to low)
     1. Correlation heatmap between enrichment features and rating 
     1. ANOVA between enrichment features and rating
-    1. Quick boxplot among wine categories (red, white, sparkling, rosé, dessert, port)
-    1. Quick single scatter plot only for red-wine
-    1. Combine all visualizations to a clean notebook with ToC (maybe automatically run?)
-1. Clean up folder structure incl outputs etc (Jonas)
-1. Finalize Report/readme with graphs and schemas (Both)
 1. Adjust report: data is not cleaned before it is appended, but the whole table is cleaned. This is necessary for two reasons: cleaning rules are by nature lagging and have to be applied for 'old' data anyway. And the google trends API has stochastic malfunctions. So we need to retry for the unsuccessful tuples. As we always check wether the tuples exist, this does not lead to more API calls or overall more computations (Both)
+1. Finalize Report/readme with graphs and schemas (Both)
+1. Clean up folder structure: remove test-SQL and move output (notebook) in dedicated folders
+1. Place notebook where?
 1. Add easy startup routine and put in [How to run?](#how-to-run) (Marcell)
 
 
