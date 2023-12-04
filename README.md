@@ -2,20 +2,16 @@
 An university project on data engineering with Airflow based on wine data 
 
 # Current ToDos (sorted by priority):
-1. Dockerize Airflow and Databases (Marcell)
-    1. Design Airflow pipeline incl Docker and Postgres
+1. Dockerized Airflow pipeline incl Databases (Marcell)
+    1. Finalize Airflow pipeline
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
 1. Make Visualizations in Frontend Notebook (Jonas)
-    1. Fix ANOVA Plot design and y-axis (F-score always 0-1 range?) (+ make sure no redundant code)
-    1. Fix sorting of all boxplots (always high to low)
     1. Correlation heatmap between enrichment features and rating 
     1. ANOVA between enrichment features and rating
-    1. Quick boxplot among wine categories (red, white, sparkling, rosé, dessert, port)
-    1. Quick single scatter plot only for red-wine
-    1. Combine all visualizations to a clean notebook with ToC (maybe automatically run?)
-1. Clean up folder structure incl outputs etc (Jonas)
-1. Finalize Report/readme with graphs and schemas (Both)
 1. Adjust report: data is not cleaned before it is appended, but the whole table is cleaned. This is necessary for two reasons: cleaning rules are by nature lagging and have to be applied for 'old' data anyway. And the google trends API has stochastic malfunctions. So we need to retry for the unsuccessful tuples. As we always check wether the tuples exist, this does not lead to more API calls or overall more computations (Both)
+1. Finalize Report/readme with graphs and schemas (Both)
+1. Clean up folder structure: remove test-SQL and move output (notebook) in dedicated folders
+1. Place notebook where?
 1. Add easy startup routine and put in [How to run?](#how-to-run) (Marcell)
 
 
@@ -115,7 +111,7 @@ For the Google trends, our main obstacle is the unofficial API: basically a URL 
 
 
 
-This could improve our success-rate in terms of stable connections from ~5% to ~80%. The API calls are still very slow, which is the reason we try to avoid it as much as possible. This is also the reason our parser tries to find only very similar wines in every execution, so the API calls can be minimal.
+This could improve our success-rate in terms of stable connections from ~1% to ~25% - 60%. So we have to re-try for the tuples that can't be found. The API calls are still very slow, which is the reason we try to avoid it as much as possible. This is also the reason our parser tries to find only very similar wines in every execution, so the API calls can be minimal.
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Grape + Year)-Tuples from our recently cleaned new scraped data and for each of those we generate the mean and median search frequency, which is then appended to the respective table for the production data.  
 
 While wine can be consumed long after the year of the obtained trend, the vast majority of consumers follow a buy-and-drink approach instead of collecting [Source](http://winegourd.blogspot.com/2021/01/how-soon-is-wine-consumed-after-purchase.html). This is why we decided to match the trend with the production year. An easier and less data-intensive alternative would be to only include the current trend data. But since your ultimate goal is to be able to design and implement complex data pipelines we opted for the more difficult architecture.
