@@ -302,19 +302,26 @@ def _enrich_trends():
             
         # Check if the row for median or mean column is empty
         with engine.connect() as con:
-            result = con.execute(f"SELECT median, mean FROM trends WHERE grape_type = '{keyword}' AND vintage = {year};")
+            query = text("""
+                        SELECT median, mean FROM trends WHERE grape_type = :grape_type AND vintage = :vintage
+                        """)
+            result = con.execute(query, {'grape_type': keyword, 'vintage': year})
             row = result.fetchone()
             if row is None or row['median'] is None or row['mean'] is None:
                 timeframe = f'{year}-01-01 {year}-12-31' # time frame for data
                 time.sleep(1)
                 try:
                     pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=0.1, requests_args={"headers": headers})
-                    pytrends.build_payload([keyword], cat=0, timeframe=timeframe) 
+                    pytrends.build_payload([keyword], cat=0, timeframe=timeframe)
+                    logging.info(f"queried Google Trends for {keyword} in {year}") 
                     data = pytrends.interest_over_time()
                     median = statistics.median(data.loc[:, keyword].tolist())
                     mean = statistics.mean(data.loc[:, keyword].tolist())
                     # Update the trends table with median and mean values
-                    con.execute(f"UPDATE trends SET median = {median}, mean = {mean} WHERE grape_type = '{keyword}' AND vintage = {year};")
+                    try:
+                        con.execute(f"UPDATE trends SET median = {median}, mean = {mean} WHERE grape_type = '{keyword}' AND vintage = {year};")
+                    except Exception as e:
+                        logging.error(f"Error occurred while updating trends for {keyword} in {year}: {e}")
                     logging.info(f"updated trends for {keyword} in {year} with values {median}, {mean}")
                     update_number+=1
                 except Exception as e:
@@ -411,8 +418,8 @@ end = DummyOperator(
     trigger_rule='none_failed'
 )
 
-# papermill_operator>>postgres_connect>>check_postgres>>write_postgres>>end
-# check_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
+papermill_operator>>postgres_connect>>check_postgres>>write_postgres>>end
+check_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
 get_grape_and_year>>enrich_trends>>end
 get_country_and_year>>enrich_harvest>>end
 get_region_and_year>>enrich_weather>>end
