@@ -319,7 +319,8 @@ def _enrich_trends():
                     mean = statistics.mean(data.loc[:, keyword].tolist())
                     # Update the trends table with median and mean values
                     try:
-                        con.execute(f"UPDATE trends SET median = {median}, mean = {mean} WHERE grape_type = '{keyword}' AND vintage = {year};")
+                        con.execute("UPDATE trends SET median = %s, mean = %s WHERE grape_type = %s AND vintage = %s;",
+                                    (median, mean, keyword, year))
                     except Exception as e:
                         logging.error(f"Error occurred while updating trends for {keyword} in {year}: {e}")
                     logging.info(f"updated trends for {keyword} in {year} with values {median}, {mean}")
