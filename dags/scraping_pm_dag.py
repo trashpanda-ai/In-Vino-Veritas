@@ -431,7 +431,54 @@ enrich_weather = DummyOperator(
     dag=dag,
     trigger_rule='none_failed'
 )
+#remove cells with problematic region names from the wines table
+def _clean_invalid_regions():
+    # Read the Parquet file into a pandas dataframe
+    parquet_file = '/opt/airflow/problematic_regions.parquet'
+    df = pd.read_parquet(parquet_file)
+    logging.info(f"read parquet file problematic regions with {len(df)} rows")
+    # Connect to the PostgreSQL database
+    engine = create_engine('postgresql://airflow:airflow@postgres:5432/postgres')
+    # Create an inspector
+    inspector = inspect(engine)
+    # Check if the tables exist
+    if 'wines' not in inspector.get_table_names():
+        logging.error('Table wines does not exist')
+        return
+    if 'weather' not in inspector.get_table_names():
+        logging.error('Table weather does not exist')
+        return
+    # Iterate over each row in the dataframe
+    for row in df.itertuples(index=False):
+        region = row.region
+        query_wines = text("""
+        DELETE FROM wines
+        WHERE region = :region
+        """)
+        query_weather = text("""
+        DELETE FROM weather
+        WHERE region = :region
+        """)
+        try:
+            logging.info(f"deleting rows with region {region} from wines table")
+            # Execute the wines query
+            engine.execute(query_wines, {'region': region})
+            logging.info(f"deleting rows with region {region} from weather table")
+            # Execute the weather query
+            engine.execute(query_weather, {'region': region})
+        except Exception as e:
+            # Log the deletion error
+            logging.error(f"Error occurred while deleting rows with region {region}: {e}")
+    # Close the database connection
+    engine.dispose()
 
+region_cleaning = PythonOperator(
+    task_id='region_cleaning',
+
+    dag=dag,
+    python_callable=_clean_invalid_regions,
+    trigger_rule='none_failed'
+)
 end = DummyOperator(
     task_id='finale',
     dag=dag,
@@ -443,3 +490,4 @@ check_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
 get_grape_and_year>>enrich_trends>>end
 get_country_and_year>>enrich_harvest>>end
 get_region_and_year>>enrich_weather>>end
+[enrich_harvest,enrich_trends,enrich_weather]>>examine_regions>>region_cleaning>>end
