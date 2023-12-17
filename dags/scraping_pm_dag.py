@@ -1,4 +1,5 @@
 import logging
+import os
 import statistics
 import time
 
@@ -16,6 +17,10 @@ from pytrends.request import TrendReq
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
+from geopy.exc import GeocoderTimedOut 
+from geopy.geocoders import Nominatim 
+from meteostat import  Daily, Stations
+
 default_args = {
     'start_date': datetime(2022, 1, 1),
     'retries': 1,
@@ -147,11 +152,7 @@ check_postgres = PythonOperator(
 )
 
 
-write_postgres = DummyOperator(
-    task_id='write_postgres',
-    dag=dag,
-    trigger_rule='none_failed'
-)
+
 
 def _get_grape_and_year():
     # Connect to the PostgreSQL database
@@ -416,19 +417,301 @@ def _enrich_harvest():
             logging.error(f"Error occurred while querying faostat for {country} in {year}: {e}")
             continue
     logging.info(f"updated {update_number} rows")
-    
-
-
-
+    # Close the database connection
+    engine.dispose()
 enrich_harvest = PythonOperator(
     task_id='enrich_harvest',
     dag=dag,
     python_callable=_enrich_harvest,
     trigger_rule='none_failed'
 )
-enrich_weather = DummyOperator(
+
+# average a df per column based on a multiindex if its non empty
+def average_df(df):
+    if not df.empty:
+        df = df.groupby(level=1).mean()
+    return df
+
+# get df for certain time frame based on index
+def get_growth_period(df, start, end):
+    return df.loc[start:end]
+#Vines need between 400 and 600 mm of rain per year. 
+#A regular supply of water throughout the growth cycle is needed for a high quality crop.
+#https://www.idealwine.info/conditions-necessary-great-wine-part-12/
+# get the avg of the column prcp for a df
+def get_avg_prcp(df):
+    return df['prcp'].mean()
+#At temperatures below 10°C and above 35°C, photosynthesis will be disrupted and vines will not grow properly.
+# count number of rows in a df column tmax above a threshold
+def count_above(df, column, threshold):
+    return df[df[column] > threshold][column].count()
+# count number of rows in a df column tmax under a threshold
+def count_under(df, column, threshold):
+    return df[df[column] < threshold][column].count()
+# get volatility of a single column
+def get_volatility(df, column):
+    return df[column].std()/df[column].mean()
+# get the longest consecutive sequence of a value in a df
+def longest_sequence(df, column, value):
+    return df[column].eq(value).astype(int).groupby(df[column].ne(value).cumsum()).sum().max()
+# get the longest consecutive sequence of the absence (!) of a value in a df
+# this is the longest sequence of days with rain
+def longest_sequence_no(df, column, value):
+    return df[column].ne(value).astype(int).groupby(df[column].eq(value).cumsum()).sum().max()
+#strong wind around june --> coulure 
+# get the avg of the column wspd for a df
+def get_avg_wspd(df):
+    if not df.empty:
+        year = df.index[0].year
+        df = get_growth_period(df, f'{year}-05-15', f'{year}-07-15')
+        return df['wspd'].mean()
+    else:
+        logging.warning(f"Empty DataFrame passed to get_avg_wspd")
+        return None
+#Too much rain during the May-July period --> diseases such as mildew or oidium
+# sum the column prcp for a df
+def get_sum_prcp(df):
+     year = df.index[0].year
+     df = get_growth_period(df, f'{year}-05-15', f'{year}-07-15')
+     return df['prcp'].sum()
+# function to find the coordinate of a given city/region  
+def findGeocode(city): 
+       
+    # try and catch is used to overcome the exception thrown by geolocator 
+    try:  
+        geolocator = Nominatim(user_agent="your_app_name") 
+          
+        return geolocator.geocode(city, language='en') 
+      
+    except GeocoderTimedOut: 
+          
+        return findGeocode(city) 
+# make def to return latitude and longitude for a city given a country (more reliable because sometimes the same city name exists in different countries)
+def get_lat_long(region):
+    results = findGeocode(region)
+    if results is not None:
+        if isinstance(results, list):
+            # Handle multiple results
+            logging.warning(f"Multiple results found for Region: {region}")
+            return results[0].latitude, results[0].longitude
+        else:
+            return results.latitude, results.longitude
+    else:
+        logging.warning(f"Failed to get latitude and longitude for Region: {region}")
+        return None, None
+# make def to get data based on a city and year from the n nearest stations
+def get_weather(region, year, n):
+    lat, lon = get_lat_long(region)
+    # check if not None
+    if lat is None or lon is None:
+        # break if none
+        return pd.DataFrame()
+    if year <= 0:
+        logging.error(f"Invalid year: {year}")
+        return pd.DataFrame()
+    start = datetime(int(year), 1, 1)
+    end = datetime(int(year), 12, 31)
+
+    stations = Stations()
+    stations = stations.nearby(lat, lon)
+    station = stations.fetch(n)
+    data = Daily(station, start, end)
+    data = data.fetch()
+    return average_df(data)
+# combine all function in one function to get all weather features
+def get_weather_features(region, year, n):
+    raw = get_weather(region, year, n)
+    if raw.empty:
+        logging.warning(f"Empty DataFrame returned for Region from weather search: {region}, Year: {year}")
+        return raw
+    else:
+        df = get_growth_period(raw, f'{year}-03-11', f'{year}-09-20')
+        return df
+
+def _enrich_weather():
+    update_number = 0
+    # Read the Parquet file into a pandas dataframe
+    parquet_file = '/opt/airflow/region_and_year.parquet'
+    df = pd.read_parquet(parquet_file)
+    logging.info(f"read parquet file region and year with {len(df)} rows")
+
+    # Connect to the PostgreSQL database
+    engine = create_engine('postgresql://airflow:airflow@postgres:5432/postgres')
+    # Create an inspector
+    inspector = inspect(engine)
+    # Check if the table exists
+    if 'weather' not in inspector.get_table_names():
+        # Create the table
+        df.head(0).to_sql('weather', engine, if_exists='replace', index=False)
+        with engine.connect() as con:
+            con.execute('ALTER TABLE weather ADD CONSTRAINT weather_id_key PRIMARY KEY (region, vintage);')
+            con.execute('ALTER TABLE weather ADD COLUMN vola_temp FLOAT;')
+            con.execute('ALTER TABLE weather ADD COLUMN vola_rain FLOAT;')
+            con.execute('ALTER TABLE weather ADD COLUMN longest_dry FLOAT;')
+            con.execute('ALTER TABLE weather ADD COLUMN longest_wet FLOAT;')
+            con.execute('ALTER TABLE weather ADD COLUMN avg_rain FLOAT;')
+            con.execute('ALTER TABLE weather ADD COLUMN count_above35 INT;')
+            con.execute('ALTER TABLE weather ADD COLUMN count_under10 INT;')
+            con.execute('ALTER TABLE weather ADD COLUMN count_under0 INT;')
+            con.execute('ALTER TABLE weather ADD COLUMN coulure_wind FLOAT;')
+            con.execute('ALTER TABLE weather ADD COLUMN june_rain FLOAT;')
+    update_number=0
+    problematic_regions = []
+    for row in df.itertuples():
+        region=row.region
+        vintage=row.vintage
+        query = text("""
+        INSERT INTO weather (region, vintage)
+        VALUES (:region, :vintage)
+        ON CONFLICT (region, vintage) DO NOTHING
+        """)
+        try:
+            # Execute the query
+            engine.execute(query, row._asdict())
+        except Exception as e:
+            # Log the insertion error
+            logging.error(f"Error occurred while inserting row with region {row.region} and vintage {row.vintage}: {e}")
+
+        result_tuples = None
+        fetched_data = None
+        with engine.connect() as con:
+            result = con.execute("SELECT vola_temp, vola_rain, longest_dry, longest_wet, avg_rain, count_above35, count_under10, count_under0, coulure_wind, june_rain FROM weather WHERE region = %s AND vintage = %s;", (region, vintage))
+            fetched_data = result.fetchone()
+            if fetched_data is None or any(value is None for value in fetched_data):
+                result_df = get_weather_features(region, vintage, 5)
+                if result_df is result_df.empty:
+                    logging.warning(f"Empty DataFrame returned for Region from weather features: {region}, Year: {vintage}")
+                if result_df is not None and not result_df.empty:
+                    result_tuples = [
+                        get_volatility(result_df, 'tavg'),
+                        get_volatility(result_df, 'prcp'),
+                        longest_sequence(result_df, 'prcp', 0),
+                        longest_sequence_no(result_df, 'prcp', 0),
+                        get_avg_prcp(result_df),
+                        count_above(result_df, 'tmax', 35),
+                        count_under(result_df, 'tmin', 10),
+                        count_under(result_df, 'tmin', 0),
+                        get_avg_wspd(result_df),
+                        get_sum_prcp(result_df)
+                    ]
+                if result_tuples is not None:
+                    try:
+                        with engine.connect() as con:
+                            result=con.execute(
+                                "UPDATE weather SET vola_temp = COALESCE(vola_temp, %s), "
+                                "vola_rain = COALESCE(vola_rain, %s), "
+                                "longest_dry = COALESCE(longest_dry, %s), "
+                                "longest_wet = COALESCE(longest_wet, %s), "
+                                "avg_rain = COALESCE(avg_rain, %s), "
+                                "count_above35 = COALESCE(count_above35, %s), "
+                                "count_under10 = COALESCE(count_under10, %s), "
+                                "count_under0 = COALESCE(count_under0, %s), "
+                                "coulure_wind = COALESCE(coulure_wind, %s), "
+                                "june_rain = COALESCE(june_rain, %s) "
+                                "WHERE region = %s AND vintage = %s;",
+                                (
+                                    round(result_tuples[0], 4),
+                                    round(result_tuples[1], 4),
+                                    int(result_tuples[2]),
+                                    int(result_tuples[3]),
+                                    round(result_tuples[4], 4),
+                                    int(result_tuples[5]),
+                                    int(result_tuples[6]),
+                                    int(result_tuples[7]),
+                                    round(result_tuples[8], 4),
+                                    round(result_tuples[9], 4),
+                                    region,
+                                    vintage
+                                )
+                            )
+
+                            # Check if any rows were updated
+                            if result.rowcount > 0:
+                                logging.info(f"Updated {result.rowcount} cells in weather for region: {region}, vintage: {vintage}")
+                                update_number += 1
+                            else:
+                                logging.info(f"No cells updated in weather for region: {region}, vintage: {vintage}")
+
+                    except Exception as e:
+                        logging.error(f"Error occurred while updating the database for: {region} in: {vintage}: {e}")
+                        continue
+                elif result_tuples is None:
+                    logging.warning(f"Could not fetch weather data for region: {region}, vintage: {vintage}")
+                    
+                    # Adding problematic region to the list of problematic regions if it doesn't exist there already
+                    if region not in problematic_regions:
+                        problematic_regions.append(region)
+
+    logging.info(f"updated {update_number} rows")
+    logging.info(f"found {len(problematic_regions)} problematic regions")
+    # Close the database connection
+    engine.dispose()
+    # write problematic regions to parquet file
+    parquet_file = '/opt/airflow/problematic_regions.parquet'
+    if os.path.isfile(parquet_file):
+        existing_df = pd.read_parquet(parquet_file)
+        df = pd.concat([existing_df, pd.DataFrame(problematic_regions, columns=['region'])])
+    else:
+        df = pd.DataFrame(problematic_regions, columns=['region'])
+    df.to_parquet(parquet_file)
+    
+def _examine_problematic_regions():
+    # Look through the weather table for regions that have no data for any region, vintage pair
+    # If there is no data for a region, add it to the list of problematic regions
+    # If there is data for a region, remove it from the list of problematic regions
+    # Read the problematic regions parquet file
+    parquet_file = '/opt/airflow/problematic_regions.parquet'
+    df = pd.read_parquet(parquet_file)
+    logging.info(f"read parquet file problematic regions with {len(df)} rows")
+    # Connect to the PostgreSQL database
+    engine = create_engine('postgresql://airflow:airflow@postgres:5432/postgres')
+    # Create an inspector
+    inspector = inspect(engine)
+    # Check if the table exists
+    if 'weather' not in inspector.get_table_names():
+        logging.error('Table weather does not exist')
+        return
+    # Iterate over each row in the dataframe
+    for row in df.itertuples(index=False):
+        region = row.region
+        query = text("""
+        SELECT * FROM weather
+        WHERE region = :region
+        """)
+        try:
+            # Execute the query
+            result = engine.execute(query, {'region': region})
+            if result.rowcount > 0:
+                # Check if any non-null or NaN value exists in the result
+                if result.fetchone() is not None:
+                    logging.info(f"found data for region {region}")
+                    # Remove region from problematic regions
+                    df = df[df.region != region]
+                else:
+                    logging.info(f"no data found for region {region}")
+            else:
+                logging.info(f"no data found for region {region}")
+        except Exception as e:
+            # Log the insertion error
+            logging.error(f"Error occurred while querying the database for region {region}: {e}")
+    # Write the problematic regions to the parquet file
+    df.to_parquet(parquet_file)
+    # Close the database connection
+    engine.dispose()
+examine_regions=PythonOperator(
+    task_id='examine_regions',
+    dag=dag,
+    python_callable=_examine_problematic_regions,
+    trigger_rule='none_failed'
+)
+
+
+    
+
+enrich_weather = PythonOperator(
     task_id='enrich_weather',
     dag=dag,
+    python_callable=_enrich_weather,
     trigger_rule='none_failed'
 )
 #remove cells with problematic region names from the wines table
@@ -485,7 +768,7 @@ end = DummyOperator(
     trigger_rule='none_failed'
 )
 
-papermill_operator>>postgres_connect>>check_postgres>>write_postgres>>end
+papermill_operator>>postgres_connect>>check_postgres
 check_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
 get_grape_and_year>>enrich_trends>>end
 get_country_and_year>>enrich_harvest>>end
