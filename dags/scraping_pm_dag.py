@@ -360,11 +360,30 @@ def _enrich_harvest():
     # Use faostat to dynamically get the harvest amount for each country and year pair
     update_number = 0
     # Iterate over each row in the dataframe
+    try:
+        name_dict = faostat.get_par('QCL', 'area')
+        name_dict = {k: v for k, v in name_dict.items()}
+        name_dict['United States'] = name_dict.pop('United States of America')
+        name_dict['Czech Republic'] = name_dict.get('Czechia', 0) + name_dict.get('Czechoslovakia', 0)
+        name_dict.pop('Czechia', None)
+        name_dict.pop('Czechoslovakia', None)
+    except Exception as e:
+        logging.error(f"Error occurred while retrieving name dictionary: {e}")
     for rows in df.itertuples(index=False):
         country = rows.country
         year = rows.vintage
+        query = text("""
+        INSERT INTO harvest (country, vintage)
+        VALUES (:country, :vintage)
+        ON CONFLICT (country, vintage) DO NOTHING
+        """)
         try:
-            name_dict = faostat.get_par('QCL', 'area')
+            # Execute the query
+            engine.execute(query, rows._asdict())
+        except Exception as e:
+            # Log the insertion error
+            logging.error(f"Error occurred while inserting row with country {rows.country} and vintage {rows.vintage}: {e}")
+        try:
             if country in name_dict:
                 df1 = faostat.get_data_df('QCL', pars={'item':'560', 'area':name_dict[country], 'year':year}, show_flags=True, null_values=True)
                 df2 = faostat.get_data_df('QCL', pars={'item':'564', 'area':name_dict[country], 'year':year}, show_flags=True, null_values=True)
