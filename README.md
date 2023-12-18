@@ -3,7 +3,7 @@ An university project on data engineering with Airflow based on wine data
 
 # Current ToDos (sorted by priority):
 1. Dockerized Airflow pipeline incl Databases (Marcell)
-    1. Finalize Airflow pipeline
+    1. Finalize Airflow pipeline by making sure there are no empty rows in the enrichment data and no unknown Regions in the wine data
     1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
 1. Make Visualizations in Frontend Notebook (Jonas)
     1. Correlation heatmap between enrichment features and rating 
