@@ -20,6 +20,7 @@ from sqlalchemy.sql import text
 from geopy.exc import GeocoderTimedOut 
 from geopy.geocoders import Nominatim 
 from meteostat import  Daily, Stations
+from geopy.exc import GeocoderUnavailable
 
 default_args = {
     'start_date': datetime(2022, 1, 1),
@@ -199,7 +200,7 @@ def _get_country_and_year():
     query = text("""
     SELECT DISTINCT country, vintage
     FROM wines
-    WHERE country IS NOT NULL AND vintage IS NOT NULL
+    WHERE country IS NOT NULL AND vintage IS NOT NULL AND vintage > 1800
     """)
     try:
         # Execute the query
@@ -231,7 +232,7 @@ def _get_region_and_year():
     query = text("""
     SELECT DISTINCT region, vintage
     FROM wines
-    WHERE region IS NOT NULL AND vintage IS NOT NULL
+    WHERE region IS NOT NULL AND vintage IS NOT NULL AND vintage > 1800
     """)
     try:
         # Execute the query
@@ -486,6 +487,9 @@ def findGeocode(city):
     except GeocoderTimedOut: 
           
         return findGeocode(city) 
+    except GeocoderUnavailable:
+        logging.warning(f"Geocoder unavailable for city/region: {city}")
+        pass
 # make def to return latitude and longitude for a city given a country (more reliable because sometimes the same city name exists in different countries)
 def get_lat_long(region):
     results = findGeocode(region)
@@ -627,7 +631,7 @@ def _enrich_weather():
 
                             # Check if any rows were updated
                             if result.rowcount > 0:
-                                logging.info(f"Updated {result.rowcount} cells in weather for region: {region}, vintage: {vintage}")
+                                logging.info(f"Updated row in weather for region: {region}, vintage: {vintage}")
                                 update_number += 1
                             else:
                                 logging.info(f"No cells updated in weather for region: {region}, vintage: {vintage}")
@@ -650,9 +654,12 @@ def _enrich_weather():
     parquet_file = '/opt/airflow/problematic_regions.parquet'
     if os.path.isfile(parquet_file):
         existing_df = pd.read_parquet(parquet_file)
+        logging.info(f"Length of existing_df: {len(existing_df)}")
         df = pd.concat([existing_df, pd.DataFrame(problematic_regions, columns=['region'])])
+        logging.info(f"Length of df: {len(df)}")
     else:
         df = pd.DataFrame(problematic_regions, columns=['region'])
+        logging.info(f"Length of df: {len(df)}")
     df.to_parquet(parquet_file)
     
 def _examine_problematic_regions():
@@ -672,30 +679,41 @@ def _examine_problematic_regions():
         logging.error('Table weather does not exist')
         return
     # Iterate over each row in the dataframe
+    problematic_regions = []
     for row in df.itertuples(index=False):
         region = row.region
         query = text("""
-        SELECT * FROM weather
-        WHERE region = :region
+        SELECT EXISTS(
+            SELECT 1 FROM weather
+            WHERE region = :region AND (
+                vola_temp IS NOT NULL OR 
+                vola_rain IS NOT NULL OR 
+                longest_dry IS NOT NULL OR 
+                longest_wet IS NOT NULL OR 
+                avg_rain IS NOT NULL OR 
+                count_above35 IS NOT NULL OR 
+                count_under10 IS NOT NULL OR 
+                count_under0 IS NOT NULL OR 
+                coulure_wind IS NOT NULL OR 
+                june_rain IS NOT NULL
+            )
+        ) AS has_non_empty_cell
         """)
         try:
             # Execute the query
-            result = engine.execute(query, {'region': region})
-            if result.rowcount > 0:
-                # Check if any non-null or NaN value exists in the result
-                if result.fetchone() is not None:
-                    logging.info(f"found data for region {region}")
-                    # Remove region from problematic regions
-                    df = df[df.region != region]
-                else:
-                    logging.info(f"no data found for region {region}")
+            result = engine.execute(query, region=region)
+            has_non_empty_cell = result.scalar()
+            if has_non_empty_cell:
+                logging.info(f"found data for region {region}")
             else:
                 logging.info(f"no data found for region {region}")
+                problematic_regions.append(region)
         except Exception as e:
             # Log the insertion error
             logging.error(f"Error occurred while querying the database for region {region}: {e}")
     # Write the problematic regions to the parquet file
-    df.to_parquet(parquet_file)
+    problematic_regions_df = pd.DataFrame(problematic_regions, columns=['region'])
+    problematic_regions_df.to_parquet(parquet_file)
     # Close the database connection
     engine.dispose()
 examine_regions=PythonOperator(
