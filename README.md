@@ -161,8 +161,14 @@ Obstacles:
 - Obtaining sound and reliable weather data 
 
 # How to run?
-TBD Marcell
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
+ Since the dockerization is mostly based on the default docker compose yaml file, the setup is quite similar. Run these commands in the folder with the docker-compose.yaml file
+ 1. docker compose up airflow-init
+ 2. docker compose up
+
+ Then, connect to to the airflow localhost web UI through the appropiate port (8080), use the login/pwd airflow/airflow, and launch the dag.
+
+ If you want direct acces to the database:
+ docker exec -it in_vino_veritas-postgres-1 psql -U airflow -d postgres
 
 
 ```s
@@ -174,4 +180,4 @@ Ports:
 | Service    | URL                    |
 | ---------- | ---------------------- |
 | Airflow    | http://localhost:8080/ |
-| PostGres   | http://localhost:TBD/  |
+| PostGres   | http://localhost:5432/  |

@@ -12,6 +12,7 @@ from airflow.models import Connection
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.papermill.operators.papermill import PapermillOperator
+from airflow.models.param import Param,ParamsDict
 from datetime import datetime, timedelta
 from pytrends.request import TrendReq
 from sqlalchemy import create_engine, inspect
@@ -36,9 +37,28 @@ dag = DAG(
     schedule_interval='0 0 * * *',  # Run daily at midnight
     catchup=False,
     max_active_runs=1,
-    max_active_tasks=3
+    max_active_tasks=3,
+    params={
+        "bool": Param(
+            False,
+            type="boolean",
+            title="Offline mode",
+            description="A On/Off for switching to offline static data read.",
+        ),
+    }
 )
+def show_params(**kwargs) -> None:
+        params: ParamsDict = kwargs["params"]
+        logging.info(f"Params: {params}")
+        logging.info(f"Param bool: {params['bool']}")
 
+show_params = PythonOperator(
+    task_id='show_params',
+    dag=dag,
+    python_callable=show_params,
+    provide_context=True,
+    trigger_rule='none_failed'
+)
 notebook_path = '/opt/airflow/dags/scraping.ipynb'
 output_path = '/opt/airflow/dags/output.ipynb'
 
@@ -47,9 +67,10 @@ papermill_operator = PapermillOperator(
     dag=dag,
     input_nb=notebook_path,
     output_nb=output_path,
-    parameters={'param1': 'test1', 'param2': 'test2'},
+    parameters={'offline_mode': "{{params.bool}}"},
     retries=0,
-    retry_delay=timedelta(minutes=1)
+    retry_delay=timedelta(minutes=1),
+    trigger_rule='none_failed'
 )
 def _create_or_update_conn(conn_id, conn_type, host, login, pwd, port, desc):
     conn = Connection(conn_id=conn_id,
@@ -786,7 +807,7 @@ end = DummyOperator(
     trigger_rule='none_failed'
 )
 
-papermill_operator>>postgres_connect>>check_postgres
+show_params>> papermill_operator>>postgres_connect>>check_postgres
 check_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
 get_grape_and_year>>enrich_trends>>end
 get_country_and_year>>enrich_harvest>>end
