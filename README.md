@@ -175,6 +175,9 @@ Obstacles:
 ./start.sh
 ```
 
+Offline mode:
+A static csv file is inlcuded which can be read by enabling the offline_mode option when *manually triggering* the dag. This does not work on scheduled runs, as they will run with default settings.
+
 Ports:
 
 | Service    | URL                    |
