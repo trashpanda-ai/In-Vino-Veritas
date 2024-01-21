@@ -89,16 +89,16 @@ TBD: Picture will be changed after data model is finalized  ![](https://via.plac
 ## Ingestion
 For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
 
-The wine quality data set is already cleaned and readily available and only needs to be loaded and saved in a Postgres database.
+**The wine quality data set is already cleaned and readily available and only needs to be loaded and saved in a Postgres database.??????**
 
 ## Staging
 The Staging area includes two main tasks: cleansing and enrichment.
 
 ### Cleansing
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
-The newly scraped data is loaded from the Parquet file and by application of a left join with the production data, removing the already existing wines. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
-The 'new' wines are then cleaned with a growing list of rules.
-This cleaned data can then be appended to the production data. All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files). Based on the feedback during our presentation, this is now implemented in Postgres instead of MongoDB as the data is already structured.
+ Upon scraping, duplicates are removed, and wine entries with missing data in key areas dropped. Region data is examined and then the discarding happens based on a whitelist-blacklist system, where regions which might end up on the blacklist due to programming logic may still be included. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
+  The scraped data is loaded from the Parquet file and entry-by-entry checked against the production data, inserting only those into production whose id is not already present there. 
+ All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files). This happens after all enrichment processes have concluded. Based on the feedback during our presentation, the database is now implemented in Postgres instead of MongoDB as the data is already structured.
 
 ### Enrichments
 For the Google trends, our main obstacle is the unofficial API: basically a URL generator pasting the keyword and year into a URL template and using the ```request``` Python package to parse the result. The problem is the uninspired implementation of the latter, because one is immediately identified as a parser. Thus we had to come up with a fix: A connection set-up through manually created cookies
@@ -116,10 +116,14 @@ This could improve our success-rate in terms of stable connections from ~1% to ~
 
 While wine can be consumed long after the year of the obtained trend, the vast majority of consumers follow a buy-and-drink approach instead of collecting [Source](http://winegourd.blogspot.com/2021/01/how-soon-is-wine-consumed-after-purchase.html). This is why we decided to match the trend with the production year. An easier and less data-intensive alternative would be to only include the current trend data. But since your ultimate goal is to be able to design and implement complex data pipelines we opted for the more difficult architecture.
 
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) For the harvest data our approach is very straight forward: We obtain the unique (Country + Year)-Tuples from our recently cleaned new scraped data and for each of those we retrieve the Grape Production Area and Amount and the Wine Production Amount. These three features are then appended to the respective table for the production data.
+  For the harvest data our approach is very straight forward: We obtain the unique (Country + Year)-Tuples from the production data and for each of those we retrieve the Grape Production Area and Amount and the Wine Production Amount. These three features are then appended to the respective table for the production data.
 
-The last enrichment data is the weather data: Since we aim for the exact weather data, the GPS location is extracted via ```Geopy``` from the vivino.com region instead of country. The nature of a user-based website leads unfortunately to inaccuracies. If a region cannot be found, we log the region to later include in the cleaning process (often the grape variety is entered as region on vivino). Another failsafe against wrong coordinates is a check whether the found location matches the regions' dedicated country. This way our location results are very robust. For the desired weather data, we average the $n$ closest stations' data for a more robust and granular time series.
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Region + Year + Country)-Tuples from our recently cleaned new scraped data and for each of those we generate the following specifically engineered features for the growth period (March 11th -- September 20th) of the wines:
+  The last enrichment data is the weather data: Since we aim for the exact weather data, the GPS location is extracted via ```Geopy``` from the vivino.com region instead of country. The nature of a user-based website leads unfortunately to inaccuracies. If a region cannot be found, we log the region to later include in the cleaning process (often the grape type is entered as region on vivino). 
+
+  Due to the nature of Geopy, some regions may be deemed invalid even though they are valid wine regions, for this reason a whitelist is maintained, which collects regions for which geopy cannot find the location, but are otherwise valid wine regions.
+
+ For the desired weather data, we average the $n$ closest stations' data for a more robust and granular time series.
+  We obtain the unique (Region + Year)-Tuples from the wine production data and for each of those we generate the following specifically engineered features for the growth period (March 11th -- September 20th) of the wines:
 - ```Vola_Temp```: Volatility of temperature
 - ```Vola_Rain ```: Volatility of rain
 - ```Longest_Dry ```: Longest period without rain
@@ -131,7 +135,7 @@ The last enrichment data is the weather data: Since we aim for the exact weather
 - ``` Coulure_Wind```: Windspeed during the flowering
 - ```June_Rain ```: Rain during the May-July period leading to mildew or oidium
 
-These $10$ features are then appended to the respective table for the production data.
+These $10$ features are then appended to the respective table for the production data (the weather table).
 
 ## Production
 Based on the input during our presentation, we switched from Neo4j to a more suitable star schema on Postgres where the vivino data is our fact table and the enrichment data are dimension tables.
@@ -168,15 +172,10 @@ Obstacles:
  Then, connect to to the airflow localhost web UI through the appropiate port (8080), use the login/pwd airflow/airflow, and launch the dag.
 
  If you want direct acces to the database:
- docker exec -it in_vino_veritas-postgres-1 psql -U airflow -d postgres
+ docker exec -it in_vino_veritas-postgres-1 psql -U airflow -d postgres`
 
-
-```s
-./start.sh
-```
-
-Offline mode:
-A static csv file is inlcuded which can be read by enabling the offline_mode option when *manually triggering* the dag. This does not work on scheduled runs, as they will run with default settings.
+  Offline mode:
+  A static csv file is inlcuded which can be read by enabling the offline_mode option when *manually triggering* the dag. This does not work on scheduled runs, as they will run with default settings.
 
 Ports:
 
