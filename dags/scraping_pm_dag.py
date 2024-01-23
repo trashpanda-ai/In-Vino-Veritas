@@ -45,12 +45,26 @@ dag = DAG(
             title="Offline mode",
             description="A On/Off for switching to offline static data read.",
         ),
+        "n": Param(
+            20,
+            type="integer",
+            title="N",
+            description="Amount of wine varieties we are trying to find",
+        ),
+        "upper": Param(
+            1500,
+            type="integer",
+            title="Upper",
+            description="Upper bound for wine the varieties we are trying to find",
+        ),
     }
 )
 def show_params(**kwargs) -> None:
         params: ParamsDict = kwargs["params"]
         logging.info(f"Params: {params}")
         logging.info(f"Param bool: {params['bool']}")
+        logging.info(f"Param n: {params['n']}")
+        logging.info(f"Param upper: {params['upper']}")
 
 show_params = PythonOperator(
     task_id='show_params',
@@ -67,7 +81,9 @@ papermill_operator = PapermillOperator(
     dag=dag,
     input_nb=notebook_path,
     output_nb=output_path,
-    parameters={'offline_mode': "{{params.bool}}"},
+    parameters={'offline_mode': "{{params.bool}}",
+                'n': "{{params.n}}",
+                'upper': "{{params.upper}}"},
     retries=0,
     retry_delay=timedelta(minutes=1),
     trigger_rule='none_failed'
