@@ -145,7 +145,10 @@ TBD insert Picture
 <img src='https://upload.wikimedia.org/wikipedia/commons/b/bb/Star-schema.png' width='550'>
 
 ### Queries
-The queries are designed to leverage our star schema and combine the fact table with one of the dimension tables each to generate the necessary data for our insights. 
+The queries are designed to leverage our star schema and combine the fact table with one of the dimension tables each to generate the necessary data for our insights. Since we can actually use and apply all the data and need to apply various transformations, we will not merge it immediately via SQL, but within the jupyter notebook to transform each dataframe independently. One of the first analysis renders various boxplots showing the connection between vintage, price and rating.
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Price%20by%20Year.png' width='550'>
+
+
  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 
 # Future developments
