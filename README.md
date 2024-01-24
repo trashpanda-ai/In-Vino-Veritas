@@ -153,6 +153,7 @@ The queries are designed to leverage our star schema and combine the fact table 
 We can also see that Rosé and White wine are significantly cheaper. We also see that the new world is leading the rankings .. on a US based website... ;)
 
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Price%20by%20Wine%20Type.png' width='550'>
+Notable: The outliers of sparkling wine (Champagne)!
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Wine%20Type.png' width='550'>
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Country.png' width='550'>
 
@@ -165,6 +166,19 @@ Furthermore the question how price and rating are depending on each other is int
 We dived deeper into our data and used the taste dimensions of our wines to find correlations by means of a heatmap:
 
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap.png' width='550'>
+
+To obtain more insights we also conduct a ANOVA test to see which variable explains the most variance in our data (here comparing red and sparkling wine):
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Red%20Wine.png' width='550'>
+
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Sparkling%20Wine.png' width='550'>
+
+
+We followed the same combined approach of heatmap and ANOVA test for our enrichment data:
+
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap%20Enrichment.png' width='550'>
+
+
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Enrichment.png' width='550'>
 
 # Future developments
 1. One can parse [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling.
