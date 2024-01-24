@@ -84,7 +84,8 @@ For the last dimension to enrich our vivino data, we obtain weather data based o
 The overall pipeline is implemented in Apache Airflow and can be separated in three sections: Ingestion, Staging and Production.
 
 TBD: Picture will be changed after data model is finalized  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
-![alt text](https://github.com/trashpanda-ai/In_vino_veritas/blob/main/ressources/Flow%20Diagram.png?raw=true)
+
+![alt text](https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Flow%20Diagram.png?raw=true)
 
 ## Ingestion
 For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
@@ -125,15 +126,15 @@ While wine can be consumed long after the year of the obtained trend, the vast m
  For the desired weather data, we average the $n$ closest stations' data for a more robust and granular time series.
   We obtain the unique (Region + Year)-Tuples from the wine production data and for each of those we generate the following specifically engineered features for the growth period (March 11th -- September 20th) of the wines:
 - ```Vola_Temp```: Volatility of temperature
-- ```Vola_Rain ```: Volatility of rain
-- ```Longest_Dry ```: Longest period without rain
-- ```Longest_Wet ```: Longest period with consecutive rain
+- ```Vola_Rain```: Volatility of rain
+- ```Longest_Dry```: Longest period without rain
+- ```Longest_Wet```: Longest period with consecutive rain
 - ```Avg_Rain```: Average rain fall
-- ``` Count_above35```: Number of days with temperature above 35 degrees
-- ```Count_under10 ```: Number of days with temperature below 10 degrees
+- ```Count_above35```: Number of days with temperature above 35 degrees
+- ```Count_under10```: Number of days with temperature below 10 degrees
 - ```Count_under0 ```: Number of days with temperature below 0 degrees
-- ``` Coulure_Wind```: Windspeed during the flowering
-- ```June_Rain ```: Rain during the May-July period leading to mildew or oidium
+- ```Coulure_Wind```: Windspeed during the flowering
+- ```June_Rain```: Rain during the May-July period leading to mildew or oidium
 
 These $10$ features are then appended to the respective table for the production data (the weather table).
 
@@ -188,30 +189,34 @@ We followed the same combined approach of heatmap and ANOVA test for our enrichm
 
 # Results and Conclusion
 
-The [Jupyter notebook]() shows: ...
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
+The [Jupyter notebook](https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/In%20vino%20veritas.ipynb) shows extremely interesting results! And even though the amount of data, we scraped is still not in the desired area of _Big Data_, we can conduct some insightful analysis.
 
 Obstacles: 
-- Data needs to be cleaned iteratively and parsing can easily end in duplicates
+- Data needs to be either cleaned iteratively by hand (manual lists of regions to be changed) or we have to make rules that lead to some data loss
+- Parsing often ends in duplicates (resulting in constant database queries)
 - High dimensional data and many features
 - Obtaining sound and reliable weather data 
 
 # How to run?
- Since the dockerization is mostly based on the default docker compose yaml file, the setup is quite similar. Run these commands in the folder with the docker-compose.yaml file
- 1. docker compose up airflow-init
- 2. docker compose up
+ Since the dockerization is mostly based on the default docker compose yaml file, the setup is quite similar. Run these commands in the folder with the ```docker-compose.yaml``` file
+ 1. ```docker compose up airflow-init```
+ 2. ```docker compose up```
 
- Then, connect to to the airflow localhost web UI through the appropiate port (8080), use the login/pwd airflow/airflow, and launch the dag.
+ Then, connect to to the airflow localhost web UI through the appropriate port ```(8080)```, use the following credentials  and launch the dag:
+| Login      | Password               |
+| ---------- | ---------------------- |
+| airflow    | airflow                |
+
 
  If you want direct acces to the database:
- docker exec -it in_vino_veritas-postgres-1 psql -U airflow -d postgres`
+``` docker exec -it in_vino_veritas-postgres-1 psql -U airflow -d postgres```
 
-  Offline mode:
-  A static csv file is inlcuded which can be read by enabling the offline_mode option when *manually triggering* the dag. This does not work on scheduled runs, as they will run with default settings.
+Offline mode:
+A static ```.csv``` file is included which can be read by enabling the ```offline_mode``` option when *manually triggering* the dag. This does not work on scheduled runs, as they will run with default settings.
 
 Ports:
 
 | Service    | URL                    |
 | ---------- | ---------------------- |
 | Airflow    | http://localhost:8080/ |
-| PostGres   | http://localhost:5432/  |
+| PostGres   | http://localhost:TBD/  |
