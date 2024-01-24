@@ -157,6 +157,15 @@ We can also see that Rosé and White wine are significantly cheaper. We also see
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Country.png' width='550'>
 
 
+
+Furthermore the question how price and rating are depending on each other is interesting, because it depends on the kind of wine: For red wine it's a clear heteroscadacity without direct correlation, but sparkling wine shows a linear connection between price and ratings!
+
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Price%20per%20Category.png' width='550'>
+
+We dived deeper into our data and used the taste dimensions of our wines to find correlations by means of a heatmap:
+
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap.png' width='550'>
+
 # Future developments
 1. One can parse [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling.
 1. One can compare weather APIs (by number of NaNs and predictive qualities): meteostat vs open-meteo
