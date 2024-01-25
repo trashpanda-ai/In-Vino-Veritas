@@ -841,5 +841,4 @@ show_params>> papermill_scraping>>papermill_cleaning>>postgres_connect>>upload_p
 upload_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
 get_grape_and_year>>enrich_trends>>end
 get_country_and_year>>enrich_harvest>>end
-get_region_and_year>>enrich_weather>>end
-[enrich_harvest,enrich_trends,enrich_weather]>>examine_regions>>region_cleaning>>end
+get_region_and_year>>enrich_weather>>examine_regions>>region_cleaning>>end
