@@ -82,10 +82,37 @@ For the last dimension to enrich our vivino data, we obtain weather data based o
 
 # Pipeline
 The overall pipeline is implemented in Apache Airflow and can be separated in three sections: Ingestion, Staging and Production.
+![Alt text](assets/airflow_pipeline.png)
 
-TBD: Picture will be changed after data model is finalized  ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
+Below is the detailed description of each step.
+Each main task generates their own tables if they dont exist yet:
+1. show_params: Debug steps to later easily examine the given parameters to a certain run. 
 
-![alt text](https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Flow%20Diagram.png?raw=true)
+1. pm_scrape: Using the papermill operator and a jupyter notebook source file, the vivino website is scraped. The resulting pandas dataframe is converted into a parquet file and stored locally. In case of offline_mode usage, this step reads a predetermined .csv file instead scraping the website.
+
+1. pm_clean: With the papermill operator, the raw scraped data is passed through several steps where the dataframe is pruned from missing or incorrect data. Among these steps are:
+    1. Dropping invalid regions. Based on a whitelist-blacklist system.
+    1. Dropping entries with no vintage given.
+    1. Changing column types to more appropiate ones.
+1. postgres_connect: this step ensures that a postgres type connection is added to the airflow connections list in case other scripts would like to connect to it (and if they need such method for that)
+1. upload_postgres: the cleaned data is read, and then line-by-line inserted into the database. If the wine already exists, no duplicate will be inserted.
+
+The enrichment steps:
+
+From the production database, 3 datastreams read their data for getting trend/harvest/weather data respectively.
+
+1. get_region_and_year: Retrieves every unique region-vintage pair from the ddatabase, then writes it into a parquet file for subsequent use by the enrich_weather task.
+1. get_grape_and_year: Similarly retrieves every grape_type-vintage combination from the database for use by the enrich_trends task.
+1. get_country_and_year: Every country-vintage pair for enrich_harvest.
+1. enrich_weather: Row-by-row inserts every region-year pair, then checks if they have any missing weather attributes. If yes, then it will try to update the cells with missing values. **If geopy cant fetch the location data for a region then it will be marked as a potentially invalid region**
+1. enrich_trends: Through the use of user cookies, google trends is queried for each grape_type-year pair where a value is missing for mean and median search trends. The success rate for this task varies a lot, depending on factors such as network traffic.
+1. enrich_trends: The faostat database is queried for each country-year pair in order to get the area of grape harvest, and the amount grape and wine made. There is no pre-check for existing values.
+1. examine_regions: Regions marked as invalid are checked in the weather table to see if they have valied cells for other years. If yes, the mark is removed. This step is highly dependent on past data,and some wine regions have no clear association with weather stations or they do not posses an easily identifiable latitude/longitude.
+1. region_cleaning: Those rows in both weather and wines where no valid data is found the given regions are deleted.
+1. finale: If none of the tasks failed, the job is marked as a success.
+
+
+
 
 ## Ingestion
 For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
@@ -199,7 +226,7 @@ Obstacles:
 
 # How to run?
  Since the dockerization is mostly based on the default docker compose yaml file, the setup is quite similar. Run these commands in the folder with the ```docker-compose.yaml``` file
- 1. ```docker compose up airflow-init```
+ 1. ```docker compose up airflow-init``` (first time only)
  2. ```docker compose up```
 
  Then, connect to to the airflow localhost web UI through the appropriate port ```(8080)```, use the following credentials  and launch the dag:
@@ -219,4 +246,4 @@ Ports:
 | Service    | URL                    |
 | ---------- | ---------------------- |
 | Airflow    | http://localhost:8080/ |
-| PostGres   | http://localhost:TBD/  |
+| PostGres   | http://localhost:5432/  |
