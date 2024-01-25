@@ -1,4 +1,4 @@
-,ID,Winery,Name,Vintage,Country,Region,Wine_Style,Wine_Type,Wine_Type_ID,Grape Type,Grape_ID,Rating,Review_Count,Price,Acidity,Fizziness,Intensity,Sweetness,Tannin
+,ID,Winery,Name,Vintage,Country,Region,Wine_Style,Wine_Type,Wine_Type_ID,Grape_Type,Grape_ID,Rating,Review_Count,Price,Acidity,Fizziness,Intensity,Sweetness,Tannin
 0,The Laird 2016,Torbreck,The Laird,2016,Australia,Barossa Valley,australian-barossa-valley-shiraz,Shiraz,1,Shiraz/Syrah,1,4.8,45,700.0,2.9224362,,4.671737,2.4311223,3.0938628
 1,The Eye of Rã 2016,Glaetzer,The Eye of Rã,2016,Australia,Barossa Valley,australian-barossa-valley-shiraz,Shiraz,1,Shiraz/Syrah,1,0.0,19,434.5,3.2495804,,4.5490212,1.5198603,3.4516785
 2,Distenta Syrah 2020,Sine Qua Non,Distenta Syrah,2020,United States,California,californian-syrah,Syrah,1,Shiraz/Syrah,1,4.8,30,350.0,3.0845454,,4.4825454,1.7274545,3.6630907

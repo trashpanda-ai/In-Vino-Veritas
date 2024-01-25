@@ -76,8 +76,8 @@ show_params = PythonOperator(
 notebook_path = '/opt/airflow/dags/scraping.ipynb'
 output_path = '/opt/airflow/dags/output.ipynb'
 
-papermill_operator = PapermillOperator(
-    task_id='run_papermill',
+papermill_scraping = PapermillOperator(
+    task_id='pm_scrape',
     dag=dag,
     input_nb=notebook_path,
     output_nb=output_path,
@@ -88,6 +88,20 @@ papermill_operator = PapermillOperator(
     retry_delay=timedelta(minutes=1),
     trigger_rule='none_failed'
 )
+notebook_path2='/opt/airflow/dags/cleaning.ipynb'
+output_path2='/opt/airflow/dags/output2.ipynb'
+
+papermill_cleaning = PapermillOperator(
+    task_id='pm_clean',
+    dag=dag,
+    input_nb=notebook_path2,
+    output_nb=output_path2,
+    parameters={'offline_mode': "{{params.bool}}"},
+    retries=0,
+    retry_delay=timedelta(minutes=1),
+    trigger_rule='none_failed'
+)
+
 def _create_or_update_conn(conn_id, conn_type, host, login, pwd, port, desc):
     conn = Connection(conn_id=conn_id,
                       conn_type=conn_type,
@@ -137,7 +151,7 @@ postgres_connect = PythonOperator(
 
 def _check_and_update_postgres():
     # Read the Parquet file into a pandas dataframe
-    parquet_file = '/opt/airflow/wine_data.parquet'
+    parquet_file = '/opt/airflow/resources/wine_data.parquet'
     df = pd.read_parquet(parquet_file)
 
     # Connect to the PostgreSQL database
@@ -182,8 +196,8 @@ def _check_and_update_postgres():
 
     # Close the database connection
     engine.dispose()
-check_postgres = PythonOperator(
-    task_id='check_postgres',
+upload_postgres = PythonOperator(
+    task_id='upload_postgres',
     dag=dag,
     python_callable=_check_and_update_postgres,
     trigger_rule='none_failed'
@@ -823,8 +837,8 @@ end = DummyOperator(
     trigger_rule='none_failed'
 )
 
-show_params>> papermill_operator>>postgres_connect>>check_postgres
-check_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
+show_params>> papermill_scraping>>papermill_cleaning>>postgres_connect>>upload_postgres
+upload_postgres>>[get_grape_and_year,get_country_and_year,get_region_and_year]
 get_grape_and_year>>enrich_trends>>end
 get_country_and_year>>enrich_harvest>>end
 get_region_and_year>>enrich_weather>>end
