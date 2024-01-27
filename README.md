@@ -2,19 +2,7 @@
 An university project on data engineering with Airflow based on wine data 
 
 # Current ToDos (sorted by priority):
-1. Dockerized Airflow pipeline incl Databases (Marcell)
-    1. Finalize Airflow pipeline by making sure there are no empty rows in the enrichment data and no unknown Regions in the wine data
-    1. Add offline fallbacks (If offline: load Parquet Files with the dedicated data; Else: API Call/Scrape)
-1. Make Visualizations in Frontend Notebook (Jonas)
-    1. Correlation heatmap between enrichment features and rating 
-    1. ANOVA between enrichment features and rating
-1. Adjust report: data is not cleaned before it is appended, but the whole table is cleaned. This is necessary for two reasons: cleaning rules are by nature lagging and have to be applied for 'old' data anyway. And the google trends API has stochastic malfunctions. So we need to retry for the unsuccessful tuples. As we always check wether the tuples exist, this does not lead to more API calls or overall more computations (Both)
-1. Finalize Report/readme with graphs and schemas (Both)
-1. Clean up folder structure: remove test-SQL and move output (notebook) in dedicated folders
-1. Place notebook where?
-1. Add easy startup routine and put in [How to run?](#how-to-run) (Marcell)
-
-
+1. Let it run online and pull a clean project and let it run offline
 
 ## Table of contents
 - [Introduction](#introduction)
@@ -123,7 +111,6 @@ For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save 
 The Staging area includes two main tasks: cleansing and enrichment.
 
 ### Cleansing
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
  Upon scraping, duplicates are removed, and wine entries with missing data in key areas dropped. Region data is examined and then the discarding happens based on a whitelist-blacklist system, where regions which might end up on the blacklist due to programming logic may still be included. This is necessary because the following steps in our pipeline can be very resource-intensive, rendering it necessary to reduce the amount of new tuples as much as possible.
   The scraped data is loaded from the Parquet file and entry-by-entry checked against the production data, inserting only those into production whose id is not already present there. 
  All production data itself has to be cleaned as well, since the list of rules is lagging by nature (based on Log files). This happens after all enrichment processes have concluded. Based on the feedback during our presentation, the database is now implemented in Postgres instead of MongoDB as the data is already structured.
@@ -140,7 +127,7 @@ For the Google trends, our main obstacle is the unofficial API: basically a URL 
 
 
 This could improve our success-rate in terms of stable connections from ~1% to ~25% - 60%. So we have to re-try for the tuples that can't be found. The API calls are still very slow, which is the reason we try to avoid it as much as possible. This is also the reason our parser tries to find only very similar wines in every execution, so the API calls can be minimal.
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me) We obtain the unique (Grape + Year)-Tuples from our recently cleaned new scraped data and for each of those we generate the mean and median search frequency, which is then appended to the respective table for the production data.  
+We obtain the unique (Grape + Year)-Tuples from our recently cleaned new scraped data and for each of those we generate the mean and median search frequency, which is then appended to the respective table for the production data.  
 
 While wine can be consumed long after the year of the obtained trend, the vast majority of consumers follow a buy-and-drink approach instead of collecting [Source](http://winegourd.blogspot.com/2021/01/how-soon-is-wine-consumed-after-purchase.html). This is why we decided to match the trend with the production year. An easier and less data-intensive alternative would be to only include the current trend data. But since your ultimate goal is to be able to design and implement complex data pipelines we opted for the more difficult architecture.
 
@@ -166,9 +153,7 @@ While wine can be consumed long after the year of the obtained trend, the vast m
 These $10$ features are then appended to the respective table for the production data (the weather table).
 
 ## Production
-Based on the input during our presentation, we switched from Neo4j to a more suitable star schema on Postgres where the vivino data is our fact table and the enrichment data are dimension tables.
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
-TBD insert Picture 
+Based on the input during our presentation, we switched from Neo4j to a more suitable star schema on Postgres where the vivino data is our fact table and the enrichment data are dimension tables:
 
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Schema.png' width='550'>
 
@@ -212,7 +197,6 @@ We followed the same combined approach of heatmap and ANOVA test for our enrichm
 1. One can parse [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling.
 1. One can compare weather APIs (by number of NaNs and predictive qualities): meteostat vs open-meteo
 
- ![](https://via.placeholder.com/60x30/aa0000/000000?text=change-me)
 
 # Results and Conclusion
 
