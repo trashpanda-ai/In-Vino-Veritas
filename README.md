@@ -160,7 +160,7 @@ These $10$ features are then appended to the respective table for the production
 ## Production
 Based on the input during our presentation, we switched from Neo4j to a more suitable star schema on Postgres where the vivino data is our fact table and the enrichment data are dimension tables:
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Schema.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Schema.png' width='650'>
 
 ### Queries
 The queries are designed to leverage our star schema and combine the fact table with one of the dimension tables each to generate the necessary data for our insights. Since we can actually use and apply all the data and need to apply various transformations, we will not merge it immediately via SQL, but within the jupyter notebook to transform each dataframe independently. One of the first analysis renders various boxplots showing the connection between vintage, price and rating. We can see how the price and rating grows with vintage and also loses its variance. 
