@@ -76,30 +76,30 @@ The overall pipeline is implemented in Apache Airflow and can be separated in th
 
 Below is the detailed description of each step.
 Each main task generates their own tables if they dont exist yet:
-1. show_params: Debug steps to later easily examine the given parameters to a certain run. 
+1. ```show_params```: Debug steps to later easily examine the given parameters to a certain run. 
 
-1. pm_scrape: Using the papermill operator and a jupyter notebook source file, the vivino website is scraped. The resulting pandas dataframe is converted into a parquet file and stored locally. In case of offline_mode usage, this step reads a predetermined .csv file instead scraping the website.
+1. ```pm_scrape```: Using the papermill operator and a jupyter notebook source file, the vivino website is scraped. The resulting pandas dataframe is converted into a parquet file and stored locally. In case of offline_mode usage, this step reads a predetermined .csv file instead scraping the website.
 
-1. pm_clean: With the papermill operator, the raw scraped data is passed through several steps where the dataframe is pruned from missing or incorrect data. Among these steps are:
+1. ```pm_clean```: With the papermill operator, the raw scraped data is passed through several steps where the dataframe is pruned from missing or incorrect data. Among these steps are:
     1. Dropping invalid regions. Based on a whitelist-blacklist system.
     1. Dropping entries with no vintage given.
     1. Changing column types to more appropiate ones.
-1. postgres_connect: this step ensures that a postgres type connection is added to the airflow connections list in case other scripts would like to connect to it (and if they need such method for that)
-1. upload_postgres: the cleaned data is read, and then line-by-line inserted into the database. If the wine already exists, no duplicate will be inserted.
+1. ```postgres_connect```: this step ensures that a postgres type connection is added to the airflow connections list in case other scripts would like to connect to it (and if they need such method for that)
+1. ```upload_postgres```: the cleaned data is read, and then line-by-line inserted into the database. If the wine already exists, no duplicate will be inserted.
 
 The enrichment steps:
 
 From the production database, 3 datastreams read their data for getting trend/harvest/weather data respectively.
 
-1. get_region_and_year: Retrieves every unique region-vintage pair from the ddatabase, then writes it into a parquet file for subsequent use by the enrich_weather task.
-1. get_grape_and_year: Similarly retrieves every grape_type-vintage combination from the database for use by the enrich_trends task.
-1. get_country_and_year: Every country-vintage pair for enrich_harvest.
-1. enrich_weather: Row-by-row inserts every region-year pair, then checks if they have any missing weather attributes. If yes, then it will try to update the cells with missing values. **If geopy cant fetch the location data for a region then it will be marked as a potentially invalid region**
-1. enrich_trends: Through the use of user cookies, google trends is queried for each grape_type-year pair where a value is missing for mean and median search trends. The success rate for this task varies a lot, depending on factors such as network traffic.
-1. enrich_trends: The faostat database is queried for each country-year pair in order to get the area of grape harvest, and the amount grape and wine made. There is no pre-check for existing values.
+1. ```get_region_and_year```: Retrieves every unique region-vintage pair from the ddatabase, then writes it into a parquet file for subsequent use by the enrich_weather task.
+1. ```get_grape_and_year```: Similarly retrieves every grape_type-vintage combination from the database for use by the enrich_trends task.
+1. ```get_country_and_year```: Every country-vintage pair for enrich_harvest.
+1. ```enrich_weather```: Row-by-row inserts every region-year pair, then checks if they have any missing weather attributes. If yes, then it will try to update the cells with missing values. **If geopy cant fetch the location data for a region then it will be marked as a potentially invalid region**
+1. ```enrich_trends```: Through the use of user cookies, google trends is queried for each grape_type-year pair where a value is missing for mean and median search trends. The success rate for this task varies a lot, depending on factors such as network traffic.
+1. ```enrich_trends```: The faostat database is queried for each country-year pair in order to get the area of grape harvest, and the amount grape and wine made. There is no pre-check for existing values.
 1. examine_regions: Regions marked as invalid are checked in the weather table to see if they have valied cells for other years. If yes, the mark is removed. This step is highly dependent on past data,and some wine regions have no clear association with weather stations or they do not posses an easily identifiable latitude/longitude.
-1. region_cleaning: Those rows in both weather and wines where no valid data is found the given regions are deleted.
-1. finale: If none of the tasks failed, the job is marked as a success.
+1. ```region_cleaning```: Those rows in both weather and wines where no valid data is found the given regions are deleted.
+1. ```finale```: If none of the tasks failed, the job is marked as a success.
 
 
 
