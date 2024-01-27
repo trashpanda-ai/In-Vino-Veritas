@@ -110,7 +110,6 @@ From the production database, 3 datastreams read their data for getting trend/ha
 ## Ingestion
 For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
 
-**The wine quality data set is already cleaned and readily available and only needs to be loaded and saved in a Postgres database.??????**
 
 ## Staging
 The Staging area includes two main tasks: cleansing and enrichment.
@@ -197,6 +196,8 @@ We followed the same combined approach of heatmap and ANOVA test for our enrichm
 
 
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Enrichment.png' width='550'>
+
+The wine quality data set is already cleaned and readily available and only needs to be loaded - here we visualized it with an interactive Bayesian network.
 
 # Future developments
 1. One can parse [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling.
