@@ -1,3 +1,6 @@
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/c139dcc66ea1348046c30373337151e14888f932/assets/header.png' width='750'>
+
+
 # In Vino Veritas
 An university project on data engineering with Airflow based on wine data 
 
