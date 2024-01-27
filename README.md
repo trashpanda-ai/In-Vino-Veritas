@@ -1,4 +1,4 @@
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/c139dcc66ea1348046c30373337151e14888f932/assets/header.png' width="800" height="200">
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/c139dcc66ea1348046c30373337151e14888f932/assets/header.png' width="800" height="300">
 
 
 # In Vino Veritas
