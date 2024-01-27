@@ -74,7 +74,7 @@ For the last dimension to enrich our vivino data, we obtain weather data based o
 # Pipeline
 The overall pipeline is implemented in Apache Airflow and can be separated in three sections: Ingestion, Staging and Production.
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/c2be436b872a6aac46134e6dec98e6b27f72358b/assets/Flow%20Diagram.png' width='750'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/assets/Flow%20Diagram.png' width='750'>
 
 
 Below is the detailed description of each step.
