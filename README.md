@@ -185,8 +185,11 @@ We dived deeper into our data and used the taste dimensions of our wines to find
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap.png' width='550'>
 
 To obtain more insights we also conduct a ANOVA test to see which variable explains the most variance in our data (here comparing red and sparkling wine):
+
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Red%20Wine.png' width='550'>
+
 This means, while for red wine the ```dry-sweet``` dimension is highly important, for the sparkling wine the price and number of reviews are relevant!
+
 <img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Sparkling%20Wine.png' width='550'>
 
 
