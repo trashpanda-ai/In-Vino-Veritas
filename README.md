@@ -4,9 +4,6 @@
 # In Vino Veritas
 An university project on data engineering with Airflow based on wine data 
 
-# Current ToDos (sorted by priority):
-1. Let it run online and pull a clean project and let it run offline
-
 ## Table of contents
 - [Introduction](#introduction)
 - [Data Sources](#data-sources)
@@ -92,7 +89,7 @@ Each main task generates their own tables if they dont exist yet:
 
 The enrichment steps:
 
-From the production database, 3 datastreams read their data for getting trend/harvest/weather data respectively.
+From the production database, 3 datastreams read their data for getting trend/harvest/weather data respectively. Since this only works with scraping and API calls, it's not part of the offline mode.
 
 1. ```get_region_and_year```: Retrieves every unique region-vintage pair from the ddatabase, then writes it into a parquet file for subsequent use by the enrich_weather task.
 1. ```get_grape_and_year```: Similarly retrieves every grape_type-vintage combination from the database for use by the enrich_trends task.
