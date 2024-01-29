@@ -89,7 +89,7 @@ Each main task generates their own tables if they dont exist yet:
 
 The enrichment steps:
 
-From the production database, 3 datastreams read their data for getting trend/harvest/weather data respectively. Since this only works with scraping and API calls, it's not part of the offline mode.
+From the production database, 3 datastreams read their data for getting trend/harvest/weather data respectively. Since this only works with expensive scraping and API calls (the scraping of vivino is significantly _cheaper_) and does not exist readily as a complete CSV file, it's not part of the offline mode. All the existing enrichment data is immediately stored in our database and can be used to enrich wine with already present tuples.
 
 1. ```get_region_and_year```: Retrieves every unique region-vintage pair from the ddatabase, then writes it into a parquet file for subsequent use by the enrich_weather task.
 1. ```get_grape_and_year```: Similarly retrieves every grape_type-vintage combination from the database for use by the enrich_trends task.
