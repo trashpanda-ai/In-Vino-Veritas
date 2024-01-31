@@ -71,7 +71,7 @@ For the last dimension to enrich our vivino data, we obtain weather data based o
 # Pipeline
 The overall pipeline is implemented in Apache Airflow and can be separated in three sections: Ingestion, Staging and Production.
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/b4b79eb366526871cbc19a5dbce55ca872529332/assets/Flow%20Diagram.png' width='750'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/b4b79eb366526871cbc19a5dbce55ca872529332/assets/Flow%20Diagram.png?raw=true' width='750'>
 
 
 Below is the detailed description of each step.
@@ -156,46 +156,46 @@ These $10$ features are then appended to the respective table for the production
 ## Production
 Based on the input during our presentation, we switched from Neo4j to a more suitable star schema on Postgres where the vivino data is our fact table and the enrichment data are dimension tables:
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Schema.png' width='650'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/main/assets/Schema.png?raw=true' width='650'>
 
 ### Queries
-The queries are designed to leverage our star schema and combine the fact table with one of the dimension tables each to generate the necessary data for our insights. Since we can actually use and apply all the data and need to apply various transformations, we will not merge it immediately via SQL, but within the jupyter notebook to transform each dataframe independently. One of the first analysis renders various boxplots showing the connection between vintage, price and rating. We can see how the price and rating grows with vintage and also loses its variance. 
+The queries are designed to leverage our star schema and combine the fact table with one of the dimension tables each to generate the necessary data for our insights. Since we can actually use and apply all the data and need to apply various transformations, we will not merge it immediately via SQL, but within the [Jupyter Notebook](https://github.com/trashpanda-ai/In_vino_veritas/blob/c8e3715a2eea25ca7a5480645741c869900da709/In%20vino%20veritas.ipynb) to transform each dataframe independently. One of the first analysis renders various boxplots showing the connection between vintage, price and rating. We can see how the price and rating grows with vintage and also loses its variance. 
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Price%20by%20Year.png' width='550'>
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Year.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Price%20by%20Year.png?raw=true' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Year.png?raw=true' width='550'>
 
 We can also see that Rosé and White wine are significantly cheaper. We also see that the new world is leading the rankings .. on a US based website... ;)
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Price%20by%20Wine%20Type.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Price%20by%20Wine%20Type.png?raw=true' width='550'>
 Notable: The outliers of sparkling wine (Champagne)!
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Wine%20Type.png' width='550'>
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Country.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Wine%20Type.png?raw=true' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Country.png?raw=true' width='550'>
 
 
 
 Furthermore the question how price and rating are depending on each other is interesting, because it depends on the kind of wine: For red wine it's a clear heteroscadacity without direct correlation, but sparkling wine shows a linear connection between price and ratings!
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Price%20per%20Category.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Rating%20by%20Price%20per%20Category.png?raw=true' width='550'>
 
 We dived deeper into our data and used the taste dimensions of our wines to find correlations by means of a heatmap:
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap.png?raw=true' width='550'>
 
 To obtain more insights we also conduct a ANOVA test to see which variable explains the most variance in our data (here comparing red and sparkling wine):
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Red%20Wine.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Red%20Wine.png?raw=true' width='550'>
 
 This means, while for red wine the ```dry-sweet``` dimension is highly important, for the sparkling wine the price and number of reviews are relevant!
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Sparkling%20Wine.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Sparkling%20Wine.png?raw=true' width='550'>
 
 
 We followed the same combined approach of heatmap and ANOVA test for our enrichment data:
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap%20Enrichment.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/Heatmap%20Enrichment.png?raw=true' width='550'>
 
 
-<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Enrichment.png' width='550'>
+<img src='https://github.com/trashpanda-ai/In_vino_veritas/blob/92aa1b6e915e38e72849a14b9e039f30a75336fb/plots/PNG/ANOVA%20Rating%20Enrichment.png?raw=true' width='550'>
 
 The wine quality data set is already cleaned and readily available and only needs to be loaded - here we visualized it with an interactive Bayesian network.
 
