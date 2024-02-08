@@ -105,8 +105,7 @@ From the production database, 3 datastreams read their data for getting trend/ha
 
 
 ## Ingestion
-For ingestion, we utilize a Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear. To adapt the notebook contains a number generator producing fitting ID's to scrape vivino. The amount of data to be scraped is parameterized in the notebook.
-
+For ingestion, we utilize a parameterised Jupyter notebook within a PapermillOperator to save the scraped data as Parquet file as advised during our initial presentation. The scraping itself is based on the vivino's 'explore' section to find new wines. Since it would converge to only 2000 items found, we included random restarts with additional parameters. One of the main parameters to maximize our results is the grape variety. It's saved as an integer ID whose distribution is non-linear (all the popular wine varieties have low IDs and for the lower numbers are barely unassigned IDs). To adapt the notebook contains a number generator producing ID's fitting this distribution to scrape vivino. This number generator is parameterized in the notebook with two variables: ```n```, The amount of wine varieties we are trying to find and ```upper```, an upper bound for wine IDs we are trying to find. Additionally, there is an offline mode. (Thus, for quick runs to get some of the most popular varietes, one can use ```n```=10 and ```upper```=150. And to populate the database regularly, one can use ```n```=20 and ```upper```=1500)
 
 ## Staging
 The Staging area includes two main tasks: cleansing and enrichment.
