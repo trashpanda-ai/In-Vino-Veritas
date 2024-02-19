@@ -204,7 +204,7 @@ We followed the same combined approach of heatmap and ANOVA test for our enrichm
 The wine quality data set is already cleaned and readily available and only needs to be loaded - here we visualized it with an interactive Bayesian network.
 
 # Future developments
-1. One can parse [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling.
+1. One can scrape [lists](https://www.winespectator.com/vintage-charts) of 'officially good' wine years to select best weather features in terms of predictive modelling: [Wine-Terroir](https://github.com/trashpanda-ai/Wine-Terroir).
 1. One can compare weather APIs (by number of NaNs and predictive qualities): meteostat vs open-meteo
 
 
